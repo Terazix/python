@@ -1,31 +1,10 @@
 import random
-
-def AskInt(message: str) -> int: 
-    while True:
-        try:
-            user_input = int(input(message))
-            return user_input
-        except ValueError:
-            print("entre un truc valide")
-
-def AskInput(message: str, choice: list[str]) -> str:
-    while True:
-        user_in = input(message)
-
-        if user_in in choice:
-            return user_in
-
-        print("champs non valide")
-        print("veuiller reessayer")
-
-        
-            
-
+from tools import * 
 
 def start(essais,max_essais,nombre,min,max):
     
     while essais < max_essais:
-            essai = AskInt(f"Devinez le nombre entre {min} et {max} : ")
+            essai: int = AskInt(f"Devinez le nombre entre {min} et {max} : ")
             essais += 1
             if essai < nombre:
                 print("C'est plus !")
@@ -42,19 +21,19 @@ def start(essais,max_essais,nombre,min,max):
 def game():
     print("Bienvenue dans le jeu Devine le Nombre !")
     while True:
-        borne = AskInput("Voulez-vous définir des bornes personnalisées ? (oui/non) : ",["oui","non"])
+        borne: str = AskInput("Voulez-vous définir des bornes personnalisées ? (oui/non) : ",["oui","non"])
         if  borne == "oui":
-            min = AskInt("Entrez la borne minimale : ")
-            max = AskInt("Entrez la borne maximale : ")
+            min: int = AskInt("Entrez la borne minimale : ")
+            max:int  = AskInt("Entrez la borne maximale : ")
         else:
             min, max = 1, 100
         
-        nombre = random.randint(min, max)
+        nombre: int = random.randint(min, max)
         print(nombre)
-        essais = 0
-        max_essais = 10
+        essais: int = 0
+        max_essais: int = 10
         start(essais,max_essais,nombre,min,max)
-        rejouer = AskInput("Voulez-vous jouer à nouveau ? (oui/non) : ",["non","oui"])
+        rejouer: str = AskInput("Voulez-vous jouer à nouveau ? (oui/non) : ",["non","oui"])
         if rejouer == "oui":
             print("go") 
         else: 
