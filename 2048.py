@@ -1,26 +1,29 @@
 import random
 from tools import *
 import keyboard
+gameRunning: bool = True
+testRunning: bool = False
+
 
 # grille
 def init_grid() -> list[list[int]]:
     grid: list[list[int]] = []
-    
-    for i in range(0,4):
-        line = []
-        for j in range(0,4):
+    for i in range(0, 4):
+        line: list = []
+        for j in range(0, 4):
             line.append(0)
         grid.append(line)
-
     return grid
-    #return [[0 for _ in range(4)] for _ in range(4)]
+   
+
 
 # Fonction pour ajouter un nombre aléatoire (2 ou 4) à un emplacement vide
-def add_new(grid):
-    empty_cells = [(i, j) for i in range(4) for j in range(4) if grid[i][j] == 0]
+def add_new(grid) -> None:
+    empty_cells: list[tuple[int, int]] = [(i, j) for i in range(4) for j in range(4) if grid[i][j] == 0]
     if empty_cells:
         i, j = random.choice(empty_cells)
         grid[i][j] = generate()
+
 
 # Fonction pour afficher la grille
 def Afficher_grid(grid: list[list[int]]) -> None:
@@ -47,176 +50,254 @@ def Afficher_grid(grid: list[list[int]]) -> None:
 
 
 # fonction pour generer un nombre aleatoire dans la grille avec proba
-def generate():
-    rand = random.randint(1,10)
+def generate() -> int:
+    rand: int = random.randint(1, 10)
     if rand < 9:
         return 2
     else:
         return 4
-    
 
 
-#mouv a droite
-def move_right(grid):
+def move_right(grid: list[list[int]], score: int) -> int:
     for i in range(len(grid)):
-        for j in range(len(grid[i])-1, 0, -1):
+        # Déplacement de tout les éléments vers la droite
+        for _ in range(len(grid[i]) - 1):
+            for j in range(len(grid[i]) - 1, 0, -1):
+                if grid[i][j] == 0:
+                    grid[i][j] = grid[i][j - 1]
+                    grid[i][j - 1] = 0
+        # Fusion des éléments identiques
+        for j in range(len(grid[i]) - 1, 0, -1):
             if grid[i][j] == grid[i][j - 1] and grid[i][j] != 0:
                 grid[i][j] *= 2
+                score += grid[i][j]
                 grid[i][j - 1] = 0
-        for i in range(len(grid)):
-            grid[i].sort(key=lambda x: 1 if x == 0 else 0, reverse=True)
+        # Déplacement de tout les éléments vers la droite une seconde fois
+        for _ in range(len(grid[i]) - 1):
+            for j in range(len(grid[i]) - 1, 0, -1):
+                if grid[i][j] == 0:
+                    grid[i][j] = grid[i][j - 1]
+                    grid[i][j - 1] = 0
+    return score
 
-#mouv a gauche
-def move_left(grid):
-    for i in range(len(grid)):
-        for _ in range(len(grid) - 1):
-            for j in range(1, len(grid)):
-                if grid[i][j-1] == 0:
-                    grid[i][j] = grid[i][j-1]
-    for i in range(len(grid)):
-        for j in range(1, len(grid[i])):
-            if grid[i][j] == grid[i][j-1] and grid[i][j] != 0:
-                grid[i][j - 1] *= 2
-                grid[i][j] = 0 
-    for i in range(len(grid)):
-        for _ in range(len(grid) - 1):
-            for j in range(1, len(grid)):
-                if grid[i][j-1] == 0:
-                    grid[i][j] = grid[i][j-1]
 
-#mouv en haut
-def move_up(grid):
+def move_left(grid: list[list[int]], score: int) -> int:
     for i in range(len(grid)):
+        # Déplacement de tout les éléments vers la gauche
         for _ in range(len(grid) - 1):
             for j in range(1, len(grid[i])):
+                if grid[i][j - 1] == 0:
+                    grid[i][j - 1] = grid[i][j]
+                    grid[i][j] = 0
+        # Fusion des éléments identiques
+        for j in range(len(grid[i]) - 1):
+            if grid[i][j] == grid[i][j + 1] and grid[i][j] != 0:
+                grid[i][j] *= 2
+                score += grid[i][j]
+                grid[i][j + 1] = 0
+        # Déplacement de tout les éléments vers la gauche une seconde fois
+        for _ in range(len(grid) - 1):
+            for j in range(1, len(grid[i])):
+                if grid[i][j - 1] == 0:
+                    grid[i][j - 1] = grid[i][j]
+                    grid[i][j] = 0
+    return score
+
+
+def move_up(grid: list[list[int]], score: int) -> int:
+    for i in range(len(grid)):
+        # Déplacement de tout les éléments vers le haut
+        for _ in range(len(grid) - 1):
+            for j in range(1, len(grid)):
                 if grid[j - 1][i] == 0:
                     grid[j][i], grid[j - 1][i] = grid[j - 1][i], grid[j][i]
-    for i in range(len(grid)):
+        # Fusion des éléments identiques
         for j in range(1, len(grid[i])):
             if grid[j][i] == grid[j - 1][i] and grid[j][i] != 0:
                 grid[j - 1][i] *= 2
-                grid[j][i] = 0 
-    for i in range(len(grid)):
+                score += grid[j - 1][i]
+                grid[j][i] = 0
+        # Déplacement de tout les éléments vers le haut une seconde fois
         for _ in range(len(grid) - 1):
-            for j in range(1, len(grid[i])):
+            for j in range(1, len(grid)):
                 if grid[j - 1][i] == 0:
-                    grid[j][i], grid[j - 1][i] = grid[j - 1][i], grid[j][i]      
+                    grid[j][i], grid[j - 1][i] = grid[j - 1][i], grid[j][i]
+    return score
 
-#mouv en bas
-def move_down(grid):
+
+def move_down(grid: list[list[int]], score: int) -> int:
     for i in range(len(grid)):
+        # Déplacement de tout les éléments vers le bas
         for _ in range(len(grid) - 1):
             for j in range(len(grid) - 2, -1, -1):
                 if grid[j + 1][i] == 0:
                     grid[j + 1][i], grid[j][i] = grid[j][i], grid[j + 1][i]
-
-    for i in range(len(grid)):
+        # Fusion des éléments identiques
         for j in range(len(grid) - 2, -1, -1):
             if grid[j][i] == grid[j + 1][i] and grid[j][i] != 0:
                 grid[j + 1][i] *= 2
+                score += grid[j + 1][i]
                 grid[j][i] = 0
-    for i in range(len(grid)):
+        # Déplacement de tout les éléments vers le bas une seconde fois
         for _ in range(len(grid) - 1):
             for j in range(len(grid) - 2, -1, -1):
                 if grid[j + 1][i] == 0:
                     grid[j + 1][i], grid[j][i] = grid[j][i], grid[j + 1][i]
+    return score
 
 
-def victoras(grid):
+def victoras(grid: list[list[int]]) -> bool:
     empty_cells = [(i, j) for i in range(4) for j in range(4) if grid[i][j] == 0]
-    if empty_cells == []:
+    if not empty_cells:
         for i in range(1, len(grid)):
             for j in range(len(grid)):
-                if grid[i][j] == grid[i-1][j]:
-                    return False
-                elif grid[j][i] == grid[j][i-1]:
-                    return False
-                elif grid[i][j] == 2048:
-                    print("vous avez gagner")
+                if grid[i][j] == 2048 or grid[i - 1][j] == 2048:
+                    print("Vous avez gagner")
                     return True
-        print("vous avez perdu bande de merde")
+                elif grid[i][j] == grid[i - 1][j]:
+                    return False
+                elif grid[j][i] == grid[j][i - 1]:
+                    return False
+        print("Vous avez perdu")
         return True
 
 
-
-def game():
-    
-
-    grid = init_grid()
+def game() -> None:
+    grid: list[list[int]] = init_grid()
+    score: int = 0
+    add_new(grid)
     add_new(grid)
     Afficher_grid(grid)
+    print("Score :", score)
     print("\n")
-    generate()     
-    
-   
+    generate()
     while True:
         event = keyboard.read_event()
-        if keyboard.is_pressed('up'):
-            move_up(grid)
+        if event.event_type == keyboard.KEY_DOWN and event.name == "haut":
+            score = move_up(grid, score)
             add_new(grid)
             Afficher_grid(grid)
-            print("\n")
+            print("Score :", score, "\n")
             if victoras(grid):
                 break
-        if keyboard.is_pressed('down'):
-            move_down(grid)
+        if event.event_type == keyboard.KEY_DOWN and event.name == "bas":
+            score = move_down(grid, score)
             add_new(grid)
             Afficher_grid(grid)
-            print("\n")
+            print("Score :", score, "\n")
             if victoras(grid):
                 break
-        if keyboard.is_pressed('right'):
-            move_right(grid)
+        if event.event_type == keyboard.KEY_DOWN and event.name == "droite":
+            score = move_right(grid, score)
             add_new(grid)
             Afficher_grid(grid)
-            print("\n")
+            print("Score :", score, "\n")
             if victoras(grid):
                 break
-        if keyboard.is_pressed('left'):
-            move_left(grid)
+        if event.event_type == keyboard.KEY_DOWN and event.name == "gauche":
+            score = move_left(grid, score)
             add_new(grid)
             Afficher_grid(grid)
-            print("\n")
+            print("Score :", score, "\n")
             if victoras(grid):
                 break
 
 
-def regame():
-    v =  AskInput("voulez vous rejouer? (oui/non) ",["oui","non"])
-    if v == 'oui':
-        param()
-    else:
-        print("au revoir")
+while gameRunning:
+    print("2048 Use the arrow keys\n")
+    game()
+    if AskInput("Do you want to restart\n", ["YES", "NO"]) == "NO":
+        gameRunning = False
 
+if testRunning:
+    grid1 = [
+        [0, 0, 0, 0],
+        [2, 2, 2, 2],
+        [0, 0, 0, 0],
+        [2, 0, 0, 2],
+    ]
+    move_right(grid1, 0)
+    grid2 = [
+        [0, 0, 0, 0],
+        [0, 0, 4, 4],
+        [0, 0, 0, 0],
+        [0, 0, 0, 4],
+    ]
+    print("test move_right", grid1 == grid2)
 
-def param():
-    
-        yes = AskInput("bienvenue dans le jeux du 2048 pour commencer ecriver oui sinon ecriver non ",["oui","non"])
-        if yes == "oui":
-            print("go")
-            game()
-            regame()
-        else:
-            print("au revoir")
+    grid1 = [
+        [0, 0, 0, 0],
+        [2, 2, 2, 2],
+        [0, 0, 0, 0],
+        [2, 0, 0, 2],
+    ]
+    move_left(grid1, 0)
+    grid2 = [
+        [0, 0, 0, 0],
+        [4, 4, 0, 0],
+        [0, 0, 0, 0],
+        [4, 0, 0, 0],
+    ]
+    print("test move_left", grid1 == grid2)
 
-#param()
+    grid1 = [
+        [2, 0, 0, 2],
+        [2, 0, 0, 0],
+        [2, 0, 0, 0],
+        [2, 0, 0, 2],
+    ]
+    move_up(grid1, 0)
+    grid2 = [
+        [4, 0, 0, 4],
+        [4, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+    ]
+    print("test move_up", grid1 == grid2)
 
-grid1 = [
-    [0,0,0,0],
-    [2,2,2,2],
-    [0,0,0,0],
-    [2,0,0,2],
-]
+    grid1 = [
+        [2, 0, 0, 2],
+        [2, 0, 0, 0],
+        [2, 0, 0, 0],
+        [2, 0, 0, 2],
+    ]
+    move_down(grid1, 0)
+    grid2 = [
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [4, 0, 0, 0],
+        [4, 0, 0, 4],
+    ]
+    print("test move_down", grid1 == grid2)
 
-move_left(grid1)
-print(grid1)
-grid2 = [
-    [0,0,0,0],
-    [4,4,0,0],
-    [0,0,0,0],
-    [4,0,0,0],
-]
+    grid1 = [
+        [2, 4, 2, 4],
+        [4, 2, 4, 2],
+        [2, 4, 2, 4],
+        [4, 2, 4, 2],
+    ]
+    print("Test victoras avec 0 mouvement possible", victoras(grid1))
 
-print(grid1 == grid2)
+    grid1 = [
+        [2, 4, 2, 4],
+        [4, 2, 0, 2],
+        [2, 0, 2, 4],
+        [4, 2, 4, 2],
+    ]
+    print("Test victoras avec case vide", victoras(grid1))
 
-
+    grid1 = [
+        [1024, 1024, 2, 4],
+        [4, 2, 4, 2],
+        [2, 4, 2, 4],
+        [4, 2, 4, 2],
+    ]
+    grid2 = [
+        [2048, 1024, 2, 4],
+        [4, 2, 4, 2],
+        [2, 4, 2, 4],
+        [4, 2, 4, 2],
+    ]
+    print("Test victoras avec mouvement possible", victoras(grid1))
+    move_left(grid1, 0)
+    print("Test victoras avec 2048", victoras(grid2))
